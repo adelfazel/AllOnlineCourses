@@ -1,0 +1,73 @@
+#python3
+import sys
+def fit_new_branch(text, tree, st, L):
+    if text[st] == "$":
+        tree["$"] = st
+        return 
+    charPos = st
+    treePointer = tree
+    while text[charPos] in treePointer and charPos < L:
+        treePointer = treePointer[text[charPos]]
+        charPos += 1
+    if text[charPos] == "$":
+        treePointer["$"] = st
+        return
+    newTree = {}
+    treePointer[text[charPos]] = newTree # update last branch to a new branch
+    treePointer = newTree  # Update the tree pointer to head of that branch
+    charPos += 1
+    if text[charPos] == "$":
+        treePointer["$"] = st
+        return
+    while text[charPos] != "$":
+        treePointer[text[charPos]] = {text[charPos+1]:st}
+        treePointer = treePointer[text[charPos]]
+        charPos+=1
+        
+
+def compactTree(tree):
+    keys = tree.keys()
+    changed = False
+    for key in keys:
+        if "$" not in key:
+            branchToMerge = tree[key]
+            #print(f"branchToMerge:{branchToMerge}, len:{len(branchToMerge)}")
+            if len(branchToMerge)==1:
+                mergeKey = list(branchToMerge.keys())[0]
+                newKey = key+mergeKey
+                tree[newKey] = branchToMerge[mergeKey]
+                changed = True
+                del tree[key]
+                if "$" not in newKey:
+                    compactTree(tree[newKey])
+            else:
+                compactTree(tree[key])
+    return changed           
+            
+                 
+                
+def build_suffix_tree(text):
+    tree = {}
+    L = len(text)
+    for text_start_point in range(L):
+        # check if newrecord has a substring that matches exisitng records
+        fit_new_branch(text,tree,text_start_point,L)
+        #print(f"tree:{tree}")
+    while compactTree(tree):
+        pass
+    return tree
+
+
+def printReslt(tree):
+    for branch in tree:
+        print(branch)
+        if "$" not in branch:
+            printReslt(tree[branch])
+        
+    
+
+if __name__ == '__main__':
+    text = sys.stdin.readline().strip()
+    result = build_suffix_tree(text)
+    #print(result)
+    printReslt(result )
